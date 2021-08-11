@@ -418,3 +418,502 @@ before_submit: function(frm){
 });
 
 
+
+
+// almost done
+error: src refspec master does not match any
+
+// Copyright (c) 2021, Jick Lampago and contributors
+// For license information, please see license.txt
+
+frappe.ui.form.on('Paymongo billing info', {
+    refresh: function(frm,) { 
+        console.log(frm)
+        //-------------------------------------
+        
+        //-------------------------------------
+        
+        if(frm.doc.selected_payment === "gcash"){
+            $("[data-fieldname='gcash_payment']").show()
+            frm.set_df_property("gcash_payment", "reqd", 1)
+            $("[data-fieldname='payment']").hide();
+        }else if(frm.doc.selected_payment === "grabpay"){
+            $("[data-fieldname='grabpay']").show()
+            frm.set_df_property("grabpay", "reqd", 1)
+            $("[data-fieldname='payment']").hide();
+        }else{
+            $("[data-fieldname='debitcredit']").show()
+            frm.set_df_property("debitcredit", "reqd", 1)
+            $("[data-fieldname='payment']").hide();
+        }
+        //hide the submit button
+        if(frm.doc.source_id === "none"){
+            $('[data-label="Submit"]').prop("disabled", true)
+            $('.form-message.blue').html("<p class='blue'>Authorize this payment before you submit.</p>")
+        }
+       
+        $("[data-fieldname='payment']").html("<h3>No Payment method selected</h3><p class='warning'>Please select one above</p>");
+        $(".warning").css({"background": "rgba(76, 175, 80, 0.3)", "padding": "20px"})
+        // Gcash burron modifcation
+        $("[data-fieldname='confirm_selection']").css({"width": "60%","box-shadow": "none",}).addClass("Gcash_icon");
+        $(".btn.btn-xs.btn-default.Gcash_icon").addClass("Gcash-icon")
+        $(".Gcash-icon").prepend("<img id='theImg' src='https://lawrencedaet.com/wp-content/uploads/2020/05/globe-e1588439586232.png'/>");
+        $("#theImg").css({"width": "13%","margin": "0 10px"});
+
+        // debit/credit button modificaton
+        $("[data-fieldname='debitcredit_payment']").css({"width": "60%","margin": "-33px 0 0 150px","box-shadow": "none",}).addClass("debitcredit_payment_icon");
+        $(".btn.btn-xs.btn-default.debitcredit_payment_icon").addClass("debitcredit-icon");
+        $(".debitcredit-icon").prepend("<img id='debitcredit-icon' src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJ10jZFPqSEsc6l_zzvt8v_tKGRlZxT8520w&usqp=CAU'/>");
+        $("#debitcredit-icon").css({"width": "27%","margin": "0 10px","padding": "10px"});
+        
+        // GrabPay button modification
+        $("[data-fieldname='grabpay_payment']").css({"width": "60%","margin": "-34px 0 0 300px","box-shadow": "none"}).addClass("grabpay_payment_icon");
+        $(".btn.btn-xs.btn-default.grabpay_payment_icon").addClass("grabpay-icon");
+        $(".grabpay-icon").prepend("<img id='grabpay-icon' src='https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Grab_Logo.svg/640px-Grab_Logo.svg.png'/>");
+        $("#grabpay-icon").css({"width": "25%","margin": "0 10px","padding": "10px"}); 
+    },
+    setup: function(frm,) {	
+        // class Function
+        class Global_Class {
+            constructor(value) {
+            this.value = value;
+            }
+            ShowHide() {
+                if(this.value == "gcash"){
+                    $("[data-fieldname='payment']").hide();
+                    $("[data-fieldname='debitcredit']").hide();
+                    $("[data-fieldname='grabpay']").hide();
+                    $("[data-fieldname='gcash_payment']").show();
+                    // Active button background
+                    frm.doc.selected_payment = "gcash"
+                    // enable mandatory on gcash childtable
+                    frm.set_df_property("gcash_payment", "reqd", 1);
+                    frm.set_df_property("debitcredit", "reqd", 0);
+                    frm.set_df_property("grabpay", "reqd", 0);
+                }else if(this.value == "debitcredit"){
+                    $("[data-fieldname='payment']").hide();
+                    $("[data-fieldname='debitcredit']").show();
+                    $("[data-fieldname='grabpay']").hide();
+                    $("[data-fieldname='gcash_payment']").hide();
+                    // Active button background
+                    frm.doc.selected_payment = "card"
+                
+                    // enable mandatory on debitcredit childtable
+                    frm.set_df_property("gcash_payment", "reqd", 0);
+                    frm.set_df_property("debitcredit", "reqd", 1);
+                    frm.set_df_property("grabpay", "reqd", 0);
+                }else if(this.value == "grabpay"){
+                    $("[data-fieldname='payment']").hide();
+                    $("[data-fieldname='debitcredit']").hide();
+                    $("[data-fieldname='grabpay']").show();
+                    $("[data-fieldname='gcash_payment']").hide();
+                    // Active button background
+                    frm.doc.selected_payment = "grabpay"
+                    // enable mandatory on grabpay childtable
+                    frm.set_df_property("gcash_payment", "reqd", 0);
+                    frm.set_df_property("debitcredit", "reqd", 0);
+                    frm.set_df_property("grabpay", "reqd", 1);
+                }else if(this.value == "undefined"){
+                    //show form of a selected payment method
+                    $("[data-fieldname='debitcredit']").hide();
+                    $("[data-fieldname='grabpay']").hide();
+                    $("[data-fieldname='gcash_payment']").hide();
+                    $("[data-fieldname='payment']").show();
+                    // Active button background
+                }
+            }
+        }
+        let refresh = new Global_Class("undefined")
+        refresh.ShowHide()
+
+        // button function
+        // Gcash payment button
+        frm.cscript.confirm_selection = function(doc) {
+            let gcash = new Global_Class("gcash");
+            gcash.ShowHide();
+        }
+        // Debit/Credit paymnet button
+        frm.cscript.debitcredit_payment = function(doc) {
+            let debitcredit = new Global_Class("debitcredit");
+            debitcredit.ShowHide();
+        }
+        // Grabpay payment button
+        frm.cscript.grabpay_payment = function(doc) {
+            let grabpay = new Global_Class("grabpay");
+            grabpay.ShowHide();
+        }
+        // For gcash and garbpay, create chargeable payment
+    
+        frm.cscript.confirm_payment = function(doc) {
+            const public_key = 'Basic cGtfdGVzdF84MnR6QndIMnd0b0tWYmtCTENENWptMXY6'
+            // URL
+            const selectResourceApi = (value) => {
+                if(value === "gcash" || value === "grabpay"){
+                    const url =  "https://api.paymongo.com/v1/sources"
+                    return url
+                }else if(value === "card"){
+                    const url ="https://api.paymongo.com/v1/payment_methods"
+                    return url
+                }
+            }
+            const get_country = (value) => {
+                let acro = "hey"
+                let array = ["Philippines", "China"]
+                let acroArray = ["PH","CH"]
+                let res = array.indexOf(value);
+                acro = acroArray[res]
+                return acro
+            }
+
+            // craeate a function to covert to cent
+            var formatToCents = function(value) {
+                value = (value + '').replace(/[^\d.-]/g, '');
+                if (value && value.includes('.')) {
+                value = value.substring(0, value.indexOf('.') + 3);
+                }
+                return value ? Math.round(parseFloat(value) * 100) : 0;
+            }
+            const selectPayloadDetails = (value) => {
+                if(value === "gcash"){
+                    const gcash = {
+                            amount: formatToCents(frm.doc.gcash_payment[0].amount__in_php_),
+                            redirect: {
+                                success: `https://www.google.com/`,
+                                failed: "https://www.youtube.com/"
+                        },
+                            billing: {
+                                address: {
+                                    line1: frm.doc.street,
+                                    line2: frm.doc.barangay,
+                                    city:  frm.doc.city,
+                                    state: frm.doc.state,
+                                    postal_code: frm.doc.zip_code,
+                                    country: get_country(frm.doc.country)
+                                },
+                            name: frm.doc.gcash_payment[0].full_name__rgistered_on_gcash_,
+                            email: frm.doc.email,
+                            phone: frm.doc.gcash_payment[0].gcash_number
+                            },
+                            type: "gcash",
+                            currency: frm.doc.currency
+                        }
+                    return gcash
+                }else if(value === "grabpay"){
+                    const grabpay = {
+                        amount: formatToCents(frm.doc.grabpay[0].amount_in_php),
+                            redirect: {
+                                success: `https://www.google.com/`,
+                                failed: "https://www.youtube.com/"
+                        },
+                            billing: {
+                                address: {
+                                    line1: frm.doc.street,
+                                    line2: frm.doc.barangay,
+                                    city:  frm.doc.city,
+                                    state: frm.doc.state,
+                                    postal_code: frm.doc.zip_code,
+                                    country: get_country(frm.doc.country)
+                                },
+                            name: frm.doc.grabpay[0].full_name,
+                            email: frm.doc.email,
+                            phone: frm.doc.grabpay[0].grab_account
+                            },
+                            type: "grab_pay",
+                            currency: frm.doc.currency
+                    }
+                    return grabpay
+                }else if(value === "card"){
+                    const card = {
+                        details: {
+                            card_number: frm.doc.debitcredit[0].card_number, 
+                            exp_month: frm.doc.debitcredit[0].expiration_month, 
+                            exp_year: frm.doc.debitcredit[0].expiration_year, 
+                            cvc: frm.doc.debitcredit[0].cvc.toString()
+                        },
+                        billing: {
+                        address: {
+                            line1: frm.doc.street,
+                            line2: frm.doc.barangay,
+                            city:  frm.doc.city,
+                            state: frm.doc.state,
+                            postal_code: frm.doc.zip_code,
+                            country: get_country(frm.doc.country)
+                        },
+                        name: frm.doc.debitcredit[0].full_name_on_the_card,
+                        email: frm.doc.email,
+                        phone: frm.doc.phone_number
+                        },
+                        type: 'card'
+                    }
+                    return card
+                }
+            }
+                const payload = {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        Authorization: public_key
+                    },
+                    body: JSON.stringify({
+                        data: {
+                            attributes: selectPayloadDetails(frm.doc.selected_payment)
+                        }
+                    })
+                }
+                // Creata a payment
+                const CreatePayment = (value) => {
+                    cur_frm.set_value("source_id", value)
+                }
+                const api_url = (selectResourceApi(frm.doc.selected_payment))
+                fetch(api_url, payload)
+                .then(res => res.json())
+                .then(res => {    
+                    if(res.data.attributes.type === "card"){
+                        CreatePayment(res.data.id)
+                    }else{
+                        CreatePayment(res.data.id)
+                        window.open(res.data.attributes.redirect.checkout_url)
+                    }
+                    
+                })
+                .catch(err => {});
+
+        }
+
+    },
+    // validate if the required feild are meet
+    validate: function(frm){
+        if(frm.fields[8].df.reqd === 0 && frm.fields[9].df.reqd === 0 && frm.fields[10].df.reqd === 0  ){
+            frappe.throw("No Payment method selected, please select one")
+        }else {
+        // //card Validation
+        const url = 'https://api.paymongo.com/v1/payment_methods';
+        const public_key = 'Basic cGtfdGVzdF84MnR6QndIMnd0b0tWYmtCTENENWptMXY6'
+
+        // function in card validation
+        const get_country = (value) => {
+            let acro = "hey"
+            let array = ["Philippines", "China"]
+            let acroArray = ["PH","CH"]
+            let res = array.indexOf(value);
+            acro = acroArray[res]
+            return acro
+        }
+
+        // craeate a function to covert to cent
+        var formatToCents = function(value) {
+            value = (value + '').replace(/[^\d.-]/g, '');
+            if (value && value.includes('.')) {
+            value = value.substring(0, value.indexOf('.') + 3);
+            }
+            return value ? Math.round(parseFloat(value) * 100) : 0;
+        }
+        const options = {
+        method: 'POST',
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            Authorization: public_key
+        },
+        body: JSON.stringify({
+            data: {
+            attributes: {
+                details: {
+                    card_number: frm.doc.debitcredit[0].card_number, 
+                    exp_month: frm.doc.debitcredit[0].expiration_month, 
+                    exp_year: frm.doc.debitcredit[0].expiration_year, 
+                    cvc: frm.doc.debitcredit[0].cvc.toString()
+                },
+                billing: {
+                address: {
+                    line1: frm.doc.street,
+                    line2: frm.doc.barangay,
+                    city:  frm.doc.city,
+                    state: frm.doc.state,
+                    postal_code: frm.doc.zip_code,
+                    country: get_country(frm.doc.country)
+                },
+                name: frm.doc.debitcredit[0].full_name_on_the_card,
+                email: frm.doc.email,
+                phone: frm.doc.phone_number
+                },
+                type: 'card'
+            }
+            }
+        })
+        };
+        // Creat
+        fetch(url, options)
+        .then(res => res.json())
+        .then(res => {
+            if(typeof res.data === "undefined"){
+                if(res.errors[0].code === "parameter_invalid" && res.errors[0].source.pointer === "details.exp_year"){
+                    $('[data-label="Submit"]').prop( "disabled", true)
+                    frappe.throw("<p class='bg-danger p-3 text-white'>Card expired</p>")
+                }else if(res.errors[0].code === "parameter_invalid" && res.errors[0].source.pointer === "details.card_number"){
+                    $('[data-label="Submit"]').prop( "disabled", true)
+                    frappe.throw("<p class='bg-danger p-3 text-white'>Invalid card format</p>")
+                }else if(res.errors[0].code === "parameter_above_maximum"){
+                    $('[data-label="Submit"]').prop( "disabled", true)
+                    frappe.throw("<p class='bg-danger p-3 text-white'>cvc cannot be more than 3 characters</p>")
+                }else if(res.errors[0].code === "parameter_below_minimum"){
+                    $('[data-label="Submit"]').prop( "disabled", true)
+                    frappe.throw("<p class='bg-danger p-3 text-white'>cvc cannot be less than 3 characters</p>")
+                }else if(res.errors[0].code === "parameter_format_invalid" && res.errors[0].source.pointer === "details.card_number"){
+                    $('[data-label="Submit"]').prop( "disabled", true)
+                    frappe.throw("<p class='bg-danger p-3 text-white'>Invalid card format</p>")
+                }
+            }else if(typeof res.data === "object"){
+                return
+            }
+            
+        })
+        .catch(err => console.error('error:' + err));
+        }
+    },
+    on_submit: function(frm){
+        const secret_key = 'Basic c2tfdGVzdF91ajNkYW45U0h1aDZIZEF6REVNWFEzUlo6'
+        const public_key = "Basic c2tfdGVzdF91ajNkYW45U0h1aDZIZEF6REVNWFEzUlo6"
+        const card_payment_url = "https://api.paymongo.com/v1/payment_intents"
+        const ewallet_payments_url = 'https://api.paymongo.com/v1/payments';
+        const Retrieve_options = {
+            method: 'GET',
+            headers: {
+                Accept: 'application/json',
+                Authorization: public_key
+            }
+        }
+        //Functions 
+        const get_country = (value) => {
+            let acro = "hey"
+            let array = ["Philippines", "China"]
+            let acroArray = ["PH","CH"]
+            let res = array.indexOf(value);
+            acro = acroArray[res]
+            return acro
+        }
+
+        // craeate a function to covert to cent
+        var formatToCents = function(value) {
+            value = (value + '').replace(/[^\d.-]/g, '');
+            if (value && value.includes('.')) {
+            value = value.substring(0, value.indexOf('.') + 3);
+            }
+            return value ? Math.round(parseFloat(value) * 100) : 0;
+        }
+        //Create a payment
+        const CreatePayment = (value) => {
+            // For card
+            if(value.data.attributes.type === "card"){
+                const options = {
+                    method: 'POST',
+                    headers: {
+                      Accept: 'application/json',
+                      'Content-Type': 'application/json',
+                      Authorization: secret_key
+                    },
+                    body: JSON.stringify({
+                      data: {
+                        attributes: {
+                          amount: formatToCents(frm.doc.debitcredit[0].amount_in_php),
+                          payment_method_allowed: ['card'],
+                          payment_method_options: {card: {request_three_d_secure: 'any'}},
+                          currency: frm.doc.currency,
+                          description: frm.doc.description,
+                        }
+                      }
+                    })
+                  };
+                fetch(card_payment_url, options)
+                .then(res => res.json())
+                .then(json => {
+                   // if success attach a payment
+                    const url = `https://api.paymongo.com/v1/payment_intents/${json.data.id}/attach`;
+                    const attach_options = {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        Authorization: secret_key
+                    },
+                    body: JSON.stringify({
+                        data: {
+                        attributes: {
+                            payment_method: frm.doc.source_id,
+                            client_key: json.data.attributes.client_key,
+                            return_url: 'https://github.com/lamji/paymongo/blob/main/Authdone.js'
+                        }
+                        }
+                    })
+                    };
+
+                    fetch(url, attach_options)
+                    .then(res => res.json())
+                    .then(json => {
+                        console.log(json)
+                        alert("card transaction succeded")
+                    })
+                    .catch(err => console.error('error:' + err));
+                })
+                .catch(err => console.error('error:' + err));
+            }else {
+                // FOr e-wallet
+                const payload = {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        Authorization: secret_key
+                    },
+                    body: JSON.stringify({
+                        data: {
+                        attributes: {
+                            amount: value.data.attributes.amount,
+                            source: {
+                                id: value.data.id, 
+                                type: 'source'
+                            },
+                            description: frm.doc.description,
+                            currency: value.data.attributes.currency,
+                            statement_descriptor: 'Anything'
+                        }
+                        }
+                    })
+                }
+                fetch(ewallet_payments_url, payload)
+                .then(res => res.json())
+                .then(json => {
+                    alert("ewallet successed")
+                })
+                .catch(err => console.error('error:' + err));
+            }
+        }
+
+        // Payment confirmation
+       
+       
+
+        //Generate payment api url
+        const Payment_url = () => {
+            if(frm.doc.selected_payment === "card"){
+                const url = `https://api.paymongo.com/v1/payment_methods/${frm.doc.source_id}`
+                return url
+            }else if(frm.doc.selected_payment === "gcash" || frm.doc.selected_payment === "grabpay"){
+                const url = `https://api.paymongo.com/v1/sources/${frm.doc.source_id}`
+                return url
+            }
+        }
+        // Retrive gcash, grabpay source
+        const api_url = Payment_url()
+        fetch(api_url , Retrieve_options)
+        .then(res => res.json())
+        .then(json => {
+            CreatePayment(json)
+        })
+        .catch(err => console.error('error:' + err));
+      
+    }
+});
+
+
